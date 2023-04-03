@@ -18,7 +18,7 @@ import Servers, { Server } from "./maps/Servers";
 import Users, { User } from "./maps/Users";
 import Emojis, { Emoji } from "./maps/Emojis";
 
-import { WebSocketClient } from "./websocket/client";
+import { WebSocketClient, WebsocketFormatOptions } from "./websocket/client";
 import { ClientboundNotification } from "./websocket/notifications";
 
 import { defaultConfig } from "./config";
@@ -53,6 +53,11 @@ export interface ClientOptions {
     onPongTimeout?: "EXIT" | "RECONNECT";
 
     ackRateLimiter: boolean;
+
+    /**
+     * The data format to use for Websocket connections.
+    */
+    format: WebsocketFormatOptions;
 }
 
 export declare interface Client {
@@ -194,7 +199,7 @@ export class Client extends EventEmitter {
         }
 
         this.api = new API({ baseURL: this.apiURL });
-        this.websocket = new WebSocketClient(this);
+        this.websocket = new WebSocketClient(this, options.format);
         this.heartbeat = this.options.heartbeat;
 
         this.proxyFile = this.proxyFile.bind(this);
