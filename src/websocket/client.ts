@@ -755,7 +755,10 @@ export class WebSocketClient {
                     const buffer = await new Response(data).arrayBuffer();                
                     data = buffer;
                 }
-                if (typeof data !== "string" && !(data instanceof ArrayBuffer)) return;
+                if (typeof data !== "string"
+                    && !(data instanceof ArrayBuffer)
+                    && !(Buffer && (data instanceof Buffer))
+                ) return;
 
                 if (this.client.debug) console.debug("[>] PACKET", data);
                 const packet = this.format === "json" ? JSON.parse(data as string) : decode(data as ArrayBuffer) as ClientboundNotification;
