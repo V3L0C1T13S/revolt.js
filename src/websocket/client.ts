@@ -9,6 +9,9 @@ import {
     ServerboundNotification,
     ClientboundNotification,
 } from "./notifications";
+import { decode, encode } from "@msgpack/msgpack";
+
+export type WebsocketFormatOptions = "json" | "msgpack";
 
 export class WebSocketClient {
     client: Client;
@@ -20,11 +23,14 @@ export class WebSocketClient {
 
     ping?: number;
 
-    constructor(client: Client) {
+    format: WebsocketFormatOptions;
+
+    constructor(client: Client, format: WebsocketFormatOptions = "msgpack") {
         this.client = client;
 
         this.connected = false;
         this.ready = false;
+        this.format = format;
     }
 
     /**
@@ -54,7 +60,7 @@ export class WebSocketClient {
         )
             return;
 
-        const data = JSON.stringify(notification);
+        const data = this.format === "json" ? JSON.stringify(notification) : encode(notification);
         if (this.client.debug) console.debug("[<] PACKET", data);
         this.ws.send(data);
     }
@@ -89,7 +95,7 @@ export class WebSocketClient {
                 );
             }
 
-            const ws = new WebSocket(this.client.configuration.ws);
+            const ws = new WebSocket(`${this.client.configuration.ws}?format=${this.format}`);
             this.ws = ws;
 
             ws.onopen = () => {
@@ -745,11 +751,19 @@ export class WebSocketClient {
 
             const timeouts: Record<string, number> = {};
             const handle = async (msg: WebSocket.MessageEvent) => {
-                const data = msg.data;
-                if (typeof data !== "string") return;
+                let data = msg.data;
+
+                if (data instanceof Blob) {
+                    const buffer = await new Response(data).arrayBuffer();                
+                    data = buffer;
+                }
+                if (typeof data !== "string"
+                    && !(data instanceof ArrayBuffer)
+                    && !(Buffer && (data instanceof Buffer))
+                ) return;
 
                 if (this.client.debug) console.debug("[>] PACKET", data);
-                const packet = JSON.parse(data) as ClientboundNotification;
+                const packet = this.format === "json" ? JSON.parse(data as string) : decode(data as ArrayBuffer) as ClientboundNotification;
                 await process(packet);
             };
 
