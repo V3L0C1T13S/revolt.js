@@ -48,7 +48,7 @@ export class User {
         this._id = data._id;
         this.username = data.username;
         this.discriminator = data.discriminator;
-        this.display_name = data.display_name;
+        this.display_name = data.display_name ?? null;
 
         this.avatar = toNullable(data.avatar);
         this.badges = toNullable(data.badges);

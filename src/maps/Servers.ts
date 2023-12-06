@@ -2,7 +2,7 @@ import type {
     Category,
     Channel as ChannelI,
     DataBanCreate,
-    DataCreateChannel,
+    DataCreateServerChannel,
     DataCreateServer,
     DataEditRole,
     DataEditServer,
@@ -259,7 +259,7 @@ export class Server {
      * @param data Channel create route data
      * @returns The newly-created channel
      */
-    async createChannel(data: DataCreateChannel) {
+    async createChannel(data: DataCreateServerChannel) {
         return await this.client.api.post(
             `/servers/${this._id as ""}/channels`,
             data,
@@ -532,7 +532,8 @@ export default class Servers extends Collection<string, Server> {
                 }
             }
 
-            return this.createObj(res);
+            // ! FIXME (types)
+            return this.createObj(res as ServerI);
         });
     }
 
